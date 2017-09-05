@@ -2,40 +2,10 @@
 require('es6-promise').polyfill()
 require('isomorphic-fetch')
 
-let URL = 'http://open.mapquestapi.com/nominatim/v1/search.php?key=5Vb6GgAU6Syvx0cGys6CHSh0aDb9vAg3&format=json&format=json&q=windsor+[castle]&addressdetails=1&limit=3&viewbox=-1.99%2C52.02%2C0.78%2C50.94&exclude_place_ids=41697'
-exports.handler = (event, context, callback) => {
-  let operation = event.httpMethod
-
-  switch (operation) {
-    case 'GET':
-      callback(null, success('hi, alive'))
-      break
-    case 'POST':
-      fetch(URL)
-      .then((resp) => resp.json())
-      .then(function (json) {
-        callback(null, success(json))
-      })
-      .catch(function (err) {
-
-      })
-      break
-    default:
-      callback(null, {
-        statusCode: 200,
-        body: 'error'
-      })
-  }
+function CreateQueryUrl (q) {
+  let URL = 'http://open.mapquestapi.com/nominatim/v1/search.php?key=axf2kU3ZHapARRIkFtVNEkkxwHEpWtbw&format=json&countrycodes=US&addressdetails=1&limit=1&q='
+  return URL + encodeURIComponent(q)
 }
-
-// http://open.mapquestapi.com/nominatim/v1/search.php?key=5Vb6GgAU6Syvx0cGys6CHSh0aDb9vAg3&format=json&q=windsor+[castle]&addressdetails=1&limit=3&viewbox=-1.99%2C52.02%2C0.78%2C50.94&exclude_place_ids=41697
-// {
-//   "city": "San Diego",
-//   "input_id": "2",
-//   "state": "CA",
-//   "street": "4747 Viewridge Ave #200",
-//   "zipcode": "92123-1688"
-// }
 
 function success (result) {
   return {
@@ -60,5 +30,38 @@ function internalServerError (msg) {
       error: 'Internal Server Error',
       internalError: JSON.stringify(msg)
     })
+  }
+}
+
+exports.handler = (event, context, callback) => {
+  let operation = event.httpMethod
+  let runData = {}
+
+  switch (operation) {
+    case 'GET':
+      runData.rid = event.queryStringParameters.rid
+      runData.q = event.queryStringParameters.q
+      runData.Url = CreateQueryUrl(runData.q)
+      runData.requestStartTime = Date.now()
+
+      fetch(runData.Url)
+        .then((resp) => resp.json())
+        .then(function (json) {
+          runData.requestCompleteTime = Date.now()
+          runData.response = (json === []) ? 'not found' : json
+        })
+        .catch(function (err) {
+          runData.requestCompleteTime = Date.now()
+          runData.response = err
+        })
+        .then(function () {
+          callback(null, success(runData.response))
+        })
+      break
+    default:
+      callback(null, {
+        statusCode: 200,
+        body: 'error'
+      })
   }
 }

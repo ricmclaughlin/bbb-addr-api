@@ -1,9 +1,9 @@
 AWSTemplateFormatVersion : '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
 
-Description: Post an address; returns nominatim data
+Description: get an address; returns nominatim data
 Resources:
-  HelloWorld:
+  Address:
     Type: AWS::Serverless::Function
     Properties:
       Runtime: nodejs6.10
@@ -12,5 +12,5 @@ Resources:
         Api:
           Type: Api
           Properties:
-            Path: /hello
-            Method: any
+            Path: /address
+            Method: get
