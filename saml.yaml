@@ -8,7 +8,6 @@ Resources:
       Description: A starter AWS Lambda function.
       Runtime: python3.6
       Handler: lambda_function.lambda_handler
-      CodeUri: ./src
       MemorySize: 128
       Timeout: 3
       Events:
