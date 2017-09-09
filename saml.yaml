@@ -2,10 +2,10 @@ AWSTemplateFormatVersion: '2010-09-09'
 Transform: 'AWS::Serverless-2016-10-31'
 Description: A starter AWS Lambda function.
 Resources:
-  helloworldpython:
+  addresspython:
     Type: 'AWS::Serverless::Function'
     Properties:
-      Description: A starter AWS Lambda function.
+      Description: get address from mapquest and smartystreets
       Runtime: python3.6
       Handler: lambda_function.lambda_handler
       MemorySize: 128
@@ -14,5 +14,5 @@ Resources:
         Api:
           Type: Api
           Properties:
-            Path: /time
+            Path: /address
             Method: get
