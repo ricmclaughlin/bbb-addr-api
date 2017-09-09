@@ -14,5 +14,5 @@ Resources:
         Api:
           Type: Api
           Properties:
-            Path: /json
+            Path: /time
             Method: get
