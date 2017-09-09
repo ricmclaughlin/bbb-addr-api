@@ -1,16 +1,19 @@
-AWSTemplateFormatVersion : '2010-09-09'
-Transform: AWS::Serverless-2016-10-31
-
-Description: get an address; returns nominatim data
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: 'AWS::Serverless-2016-10-31'
+Description: A starter AWS Lambda function.
 Resources:
-  Address:
-    Type: AWS::Serverless::Function
+  helloworldpython:
+    Type: 'AWS::Serverless::Function'
     Properties:
-      Runtime: nodejs6.10
-      Handler: index.handler
+      Description: A starter AWS Lambda function.
+      Runtime: python3.6
+      Handler: lambda_function.lambda_handler
+      CodeUri: ./src
+      MemorySize: 128
+      Timeout: 3
       Events:
         Api:
           Type: Api
           Properties:
-            Path: /address
+            Path: /json
             Method: get
