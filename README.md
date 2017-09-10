@@ -4,19 +4,25 @@
 
 Accept GET requests only - other HTTP verbs are rejected with a "HTTP 405 - Method Not Allowed"
 
-Logging - All data is captured Lambda event (including request), start and end time for the request-response cycle and each external call.
+Requests without a Request ID and address are rejected with a "HTTP 400 - Bad Request"
 
+Logging - All data is captured including the Lambda event (request), start and end time for the entire request-response cycle and each external call.
 
-## Request format
+Python - the code is now all Python 3.6.2 and synchronous
 
-All re
+Request IDs - each request must contain a request ID generated on the client when enables
+
+Responses include the exact same data as is logged.
 
 ## Example Request
 
 ## Features to be Completed
 
-Real time log file analysis capability
-
 Secure Environment configuration
 
 API key 
+
+Domain Name API using Route53
+
+Real time log file analysis capability
+

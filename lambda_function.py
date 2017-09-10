@@ -7,37 +7,40 @@ import logging
 def lambda_handler(event, context):
   logger = logging.getLogger()
   logger.setLevel(logging.INFO)
-  return_json = {}
-  return_json["meta"] = {}
-  return_json["meta"]["request_start"] = time_stamp()
-  return_json["meta"]["event"] = event
+  response_body = {}
+  response_json = {}
+  response_body["meta"] = {}
+  response_body["meta"]["request_start"] = time_stamp()
+  response_body["meta"]["event"] = event
   
   if event["httpMethod"] != "GET":
-    return_json["meta"]["request_end"] = time_stamp()
-    return method_not_allowed_response(return_json)
+    response_body["meta"]["request_end"] = time_stamp()
+    response_json = method_not_allowed_response(response_body)
+    write_log(logger, response_json)
+    return response_json
 
   try:
     request_id = event["queryStringParameters"]["rid"]
     address = event["queryStringParameters"]["q"]
   except KeyError:
-    return_json["meta"]["request_end"] = time_stamp()
-    return bad_request_response(return_json)
+    response_body["meta"]["request_end"] = time_stamp()
+    response_json = bad_request_response(response_body)
+    write_log(logger, response_json)
+    return response_json
 
   else:
-    return_json["meta"]["mapquest_start"] = time_stamp()
-    return_json["mapquest"] = mapquest(address)
-    return_json["meta"]["mapquest_end"] = time_stamp()
+    response_body["meta"]["mapquest_start"] = time_stamp()
+    response_body["mapquest"] = mapquest(address)
+    response_body["meta"]["mapquest_end"] = time_stamp()
 
-    return_json["meta"]["smartystreets_start"] = time_stamp()
-    return_json["smartystreets"] = smartiestreets(address)
-    return_json["meta"]["smartystreets_end"] = time_stamp()
+    response_body["meta"]["smartystreets_start"] = time_stamp()
+    response_body["smartystreets"] = smartiestreets(address)
+    response_body["meta"]["smartystreets_end"] = time_stamp()
 
-    return_json["meta"]["request_end"] = time_stamp()
-    ## create response
-    ## append response to log
-    ## send response
-    write_log(logger, return_json)
-    return response(200, return_json)
+    response_body["meta"]["request_end"] = time_stamp()
+
+    write_log(logger, response_body)
+    return response(200, response_body)
 
 def write_log(log_obj, log_entry):
   log_obj.info('{}'.format(log_entry))
@@ -45,13 +48,13 @@ def write_log(log_obj, log_entry):
 def time_stamp():
   return datetime.now().strftime('%S%f')
 
-def method_not_allowed_response(return_json):
-  return_json["error"] = "405 Error - API only supports GET HTTP verb"
-  return response(405, return_json)
+def method_not_allowed_response(body):
+  body["error"] = "405 Error - API only supports GET HTTP verb"
+  return response(405, body)
 
-def bad_request_response(return_json):
-  return_json["error"] = "400 Error - Both address (q=) and request id (rid=) must be specified"
-  return response(400, return_json)
+def bad_request_response(body):
+  body["error"] = "400 Error - Both address (q=) and request id (rid=) must be specified"
+  return response(400, body)
 
 def response(status_code, response_body=None):
   return {
