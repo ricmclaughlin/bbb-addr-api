@@ -1,4 +1,3 @@
-from __future__ import print_function
 from datetime import datetime
 import json
 import geocoder
@@ -6,26 +5,53 @@ from smartystreets import Client
 import logging
 
 def lambda_handler(event, context):
-  return_json = {}
-  call_timestamps = {}
   logger = logging.getLogger()
   logger.setLevel(logging.INFO)
-  my_address = str('12497 Leopard St, 78410')
+  return_json = {}
+  return_json["meta"] = {}
+  return_json["meta"]["request_start"] = time_stamp()
+  return_json["meta"]["event"] = event
   
-  call_timestamps["mapquest_start"] = datetime.now().strftime('%S%f')
-  g = geocoder.mapquest(my_address, key='sUvF9V4WHStjrHH3eL6u9NiTmotJLZTs')
-  return_json["mapquest"] = g.json
-  call_timestamps["mapquest_end"] = datetime.now().strftime('%S%f')
+  if event["httpMethod"] != "GET":
+    return_json["meta"]["request_end"] = time_stamp()
+    return method_not_allowed_response(return_json)
 
-  call_timestamps["smartystreets_start"] = datetime.now().strftime('%S%f')
-  client = Client('3caeed59-a8a0-b5b6-add7-ee40f7e9fc79', 'Sd1njQ5fN2zN3cXbr3T7')
-  m = client.street_address(my_address)
-  return_json["smartystreets"] = m
-  call_timestamps["smartystreets_end"] = datetime.now().strftime('%S%f')
-  return_json["timing"] = call_timestamps
-  return_json["event"] = event
-  logger.info('{}'.format(return_json))
-  return response(200, return_json)
+  try:
+    request_id = event["queryStringParameters"]["rid"]
+    address = event["queryStringParameters"]["q"]
+  except KeyError:
+    return_json["meta"]["request_end"] = time_stamp()
+    return bad_request_response(return_json)
+
+  else:
+    return_json["meta"]["mapquest_start"] = time_stamp()
+    return_json["mapquest"] = mapquest(address)
+    return_json["meta"]["mapquest_end"] = time_stamp()
+
+    return_json["meta"]["smartystreets_start"] = time_stamp()
+    return_json["smartystreets"] = smartiestreets(address)
+    return_json["meta"]["smartystreets_end"] = time_stamp()
+
+    return_json["meta"]["request_end"] = time_stamp()
+    ## create response
+    ## append response to log
+    ## send response
+    write_log(logger, return_json)
+    return response(200, return_json)
+
+def write_log(log_obj, log_entry):
+  log_obj.info('{}'.format(log_entry))
+
+def time_stamp():
+  return datetime.now().strftime('%S%f')
+
+def method_not_allowed_response(return_json):
+  return_json["error"] = "405 Error - API only supports GET HTTP verb"
+  return response(405, return_json)
+
+def bad_request_response(return_json):
+  return_json["error"] = "400 Error - Both address (q=) and request id (rid=) must be specified"
+  return response(400, return_json)
 
 def response(status_code, response_body=None):
   return {
@@ -36,3 +62,10 @@ def response(status_code, response_body=None):
       'Access-Control-Allow-Origin': '*'
     },
   }
+
+def mapquest(addr):
+  return geocoder.mapquest(addr, key='sUvF9V4WHStjrHH3eL6u9NiTmotJLZTs').json
+
+def smartiestreets(addr):
+  client = Client('3caeed59-a8a0-b5b6-add7-ee40f7e9fc79', 'Sd1njQ5fN2zN3cXbr3T7')
+  return client.street_address(addr)
