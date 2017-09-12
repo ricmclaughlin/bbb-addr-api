@@ -19,23 +19,33 @@ def lambda_handler(event, context):
     write_log(logger, response_json)
     return response_json
 
-  try:
-    request_id = event["queryStringParameters"]["rid"]
-    address = event["queryStringParameters"]["q"]
-  except KeyError:
-    response_body["meta"]["request_end"] = time_stamp()
-    response_json = bad_request_response(response_body)
-    write_log(logger, response_json)
-    return response_json
-
   else:
-    response_body["meta"]["mapquest_start"] = time_stamp()
-    response_body["mapquest"] = mapquest(address)
-    response_body["meta"]["mapquest_end"] = time_stamp()
+    try:
+      request_id = event["queryStringParameters"]["rid"]
+      address = event["queryStringParameters"]["q"]
+    except KeyError:
+      response_body["meta"]["request_end"] = time_stamp()
+      response_json = bad_request_response(response_body)
+      write_log(logger, response_json)
+      return response_json
 
-    response_body["meta"]["smartystreets_start"] = time_stamp()
-    response_body["smartystreets"] = smartiestreets(address)
-    response_body["meta"]["smartystreets_end"] = time_stamp()
+    mapquest_api = True
+    smart_api = True
+    all_apis = event["queryStringParameters"].get("a", True)
+    
+    if all_apis == 'smarty':
+      mapquest_api = False
+    elif all_apis == 'mapquest':
+      smart_api = False
+    
+    if mapquest_api == True:  
+      response_body["meta"]["mapquest_start"] = time_stamp()
+      response_body["mapquest"] = mapquest(address)
+      response_body["meta"]["mapquest_end"] = time_stamp()
+    if smart_api == True: 
+      response_body["meta"]["smartystreets_start"] = time_stamp()
+      response_body["smartystreets"] = smartiestreets(address)
+      response_body["meta"]["smartystreets_end"] = time_stamp()
 
     response_body["meta"]["request_end"] = time_stamp()
 
@@ -67,8 +77,11 @@ def response(status_code, response_body=None):
   }
 
 def mapquest(addr):
-  return geocoder.mapquest(addr, key='sUvF9V4WHStjrHH3eL6u9NiTmotJLZTs').json
+  MAPQUEST_KEY = 'sUvF9V4WHStjrHH3eL6u9NiTmotJLZTs' 
+  return geocoder.mapquest(addr, key = MAPQUEST_KEY).json
 
 def smartiestreets(addr):
-  client = Client('3caeed59-a8a0-b5b6-add7-ee40f7e9fc79', 'Sd1njQ5fN2zN3cXbr3T7')
+  SMARTIE_AUTH_ID = '3caeed59-a8a0-b5b6-add7-ee40f7e9fc79'
+  SMARTIE_AUTH_TOKEN = 'Sd1njQ5fN2zN3cXbr3T7'
+  client = Client(SMARTIE_AUTH_ID, SMARTIE_AUTH_TOKEN)
   return client.street_address(addr)
