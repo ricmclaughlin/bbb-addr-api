@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 
-URL="http://127.0.0.1:3000/address?q="
+#URL="http://127.0.0.1:3000/address?q="
 #URL="https://n1wdj19yr4.execute-api.us-west-2.amazonaws.com/Prod/address?q="
-#URL="https://bzjnomzynd.execute-api.us-west-2.amazonaws.com/Prod/address?q="
+URL="https://bzjnomzynd.execute-api.us-west-2.amazonaws.com/Prod/address?q="
 OUTPUT_FILE='./test_results/'$(date +%s)'.json'
 just_mapquest='&a=mapquest'
 just_smarty='&a=smarty'
